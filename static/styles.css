@@ -1,0 +1,70 @@
+body {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #152126;
+}
+
+h1, h2 {
+  line-height: 1.2;
+}
+
+dt {
+  margin-top: 1rem;
+  font-weight: 700;
+}
+
+dd {
+  margin-left: 0;
+}
+
+a:focus-visible {
+  outline: 4px solid #d97706;
+  outline-offset: 3px;
+}
+
+figure {
+  margin: 2rem 0;
+}
+
+#trend-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 800px;
+  border: 1px solid #c7d3d9;
+  background: #ffffff;
+}
+
+.chart-axis {
+  stroke: #253746;
+  stroke-width: 1.5;
+}
+
+.chart-grid {
+  stroke: #d9e2e7;
+  stroke-width: 1;
+}
+
+.chart-zero-line {
+  stroke: #5b6870;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.chart-line {
+  fill: none;
+  stroke: #b33b1e;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-label {
+  fill: #253746;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}

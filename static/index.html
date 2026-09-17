@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Climate Commons</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+
+  <body>
+    <main>
+      <h1>Climate Commons</h1>
+
+      <p>
+        A simple report of global temperature anomalies based on NASA GISTEMP data.
+      </p>
+
+      <form id="range-form" novalidate>
+        <fieldset>
+          <legend>Choose a report period</legend>
+
+          <p>
+            <label for="start-year">Start year</label>
+            <input
+              id="start-year"
+              name="start-year"
+              type="number"
+              min="1880"
+              max="2025"
+              inputmode="numeric"
+            >
+          </p>
+
+          <p>
+            <label for="end-year">End year</label>
+            <input
+              id="end-year"
+              name="end-year"
+              type="number"
+              min="1880"
+              max="2025"
+              inputmode="numeric"
+            >
+          </p>
+
+          <button type="submit">Update report</button>
+          <button type="button" id="reset-range">
+            Use the full record
+          </button>
+        </fieldset>
+      </form>
+
+      <p id="status" role="status" aria-live="polite">
+        Loading climate report...
+      </p>
+
+      <p id="error" role="alert" tabindex="-1" hidden></p>
+
+      <section id="report" hidden aria-labelledby="report-heading">
+        <h2 id="report-heading">Climate report</h2>
+
+        <p id="interpretation"></p>
+
+        <dl>
+          <dt>Report coverage</dt>
+          <dd id="coverage"></dd>
+
+          <dt>Latest annual anomaly</dt>
+          <dd id="latest-anomaly"></dd>
+
+          <dt>Five-year average anomaly</dt>
+          <dd id="five-year-average"></dd>
+
+          <dt>Long-term trend</dt>
+          <dd id="trend"></dd>
+        </dl> 
+        <figure aria-labelledby="chart-heading">
+  <h3 id="chart-heading">Annual temperature anomaly</h3>
+
+  <svg
+    id="trend-chart"
+    viewBox="0 0 800 360"
+    role="img"
+    aria-labelledby="chart-heading chart-description"
+  >
+    <desc id="chart-description">
+      A line chart of annual global temperature anomalies for the selected
+      period, based on NASA GISTEMP data.
+    </desc>
+  </svg>
+
+  <figcaption id="chart-caption">
+    Values show annual anomalies relative to NASA's 1951–1980 baseline.
+  </figcaption>
+</figure>
+
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

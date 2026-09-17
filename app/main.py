@@ -1,37 +1,33 @@
 from pathlib import Path
-from py_compile import main
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from app.gistemp import load_gistemp_annual_data
 
 
 app = FastAPI(
     title="Climate Commons API",
-    version="0.1.0",
+    version="0.3.0",
     description="Screen-reader-first climate data reporting API.",
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 DATA_PATH = Path("data_fixtures/gistemp_sample.csv")
 
 
+@app.get("/", include_in_schema=False)
+def homepage():
+    return FileResponse("static/index.html")
+
+
 def load_climate_data() -> pd.DataFrame:
-    data = pd.read_csv(DATA_PATH)
-
-    required_columns = {"year", "anomaly_c"}
-    if not required_columns.issubset(data.columns):
-        raise ValueError("The CSV must contain year and anomaly_c columns.")
-
-    data["year"] = pd.to_numeric(data["year"], errors="raise").astype(int)
-    data["anomaly_c"] = pd.to_numeric(
-        data["anomaly_c"],
-        errors="raise",
-    )
-
-    if data["year"].duplicated().any():
-        raise ValueError("The CSV contains duplicate years.")
-
-    return data.sort_values("year").reset_index(drop=True)
+    return load_gistemp_annual_data()
 
 
 def five_year_average(data: pd.DataFrame) -> float:
@@ -48,34 +44,96 @@ def trend_c_per_decade(data: pd.DataFrame) -> float:
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
+def health_check() -> dict:
     return {"status": "ok"}
 
+@app.get("/observations")
+def climate_observations(
+    start_year: Optional[int] = Query(default=None),
+    end_year: Optional[int] = Query(default=None),
+) -> dict:
+    if start_year is not None and end_year is not None:
+        if start_year > end_year:
+            raise HTTPException(
+                status_code=400,
+                detail="start_year must be earlier than or equal to end_year.",
+            )
+
+    data = load_climate_data()
+
+    if start_year is not None:
+        data = data[data["year"] >= start_year]
+
+    if end_year is not None:
+        data = data[data["year"] <= end_year]
+
+    if data.empty:
+        raise HTTPException(
+            status_code=400,
+            detail="No observations were found for the selected year range.",
+        )
+
+    return {
+        "source": "NASA GISS Surface Temperature Analysis (GISTEMP v4)",
+        "observations": data.to_dict(orient="records"),
+    }
 
 @app.get("/report")
-def climate_report() -> dict[str, object]:
+def climate_report(
+    start_year: Optional[int] = Query(
+        default=None,
+        description="First year to include in the report.",
+    ),
+    end_year: Optional[int] = Query(
+        default=None,
+        description="Last year to include in the report.",
+    ),
+) -> dict:
+    if start_year is not None and end_year is not None:
+        if start_year > end_year:
+            raise HTTPException(
+                status_code=400,
+                detail="start_year must be earlier than or equal to end_year.",
+            )
+
     data = load_climate_data()
+
+    if start_year is not None:
+        data = data[data["year"] >= start_year]
+
+    if end_year is not None:
+        data = data[data["year"] <= end_year]
+
+    if len(data) < 5:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Choose a range containing at least five annual "
+                "observations."
+            ),
+        )
+
     latest = data.iloc[-1]
     trend = trend_c_per_decade(data)
 
     if trend > 0:
         interpretation = (
-            "The annual global temperature anomaly increased over "
-            "this sample period."
+            "The global annual temperature anomaly increased across "
+            "the selected period."
         )
     elif trend < 0:
         interpretation = (
-            "The annual global temperature anomaly decreased over "
-            "this sample period."
+            "The global annual temperature anomaly decreased across "
+            "the selected period."
         )
     else:
         interpretation = (
-            "The annual global temperature anomaly was flat over "
-            "this sample period."
+            "The global annual temperature anomaly was flat across "
+            "the selected period."
         )
 
     return {
-        "source": "Local development fixture based on NASA GISTEMP-style data",
+        "source": "NASA GISS Surface Temperature Analysis (GISTEMP v4)",
         "coverage_start_year": int(data["year"].min()),
         "coverage_end_year": int(data["year"].max()),
         "observation_count": int(len(data)),
@@ -85,4 +143,3 @@ def climate_report() -> dict[str, object]:
         "trend_c_per_decade": round(trend, 3),
         "interpretation": interpretation,
     }
-

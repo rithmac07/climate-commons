@@ -1,4 +1,5 @@
-from typing import Optional
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Optional
 
 import numpy as np
 import pandas as pd
@@ -10,16 +11,25 @@ from pydantic import BaseModel
 from app.gistemp import load_gistemp_annual_data
 
 
-app = FastAPI(
-    title="Climate Commons API",
-    version="0.3.0",
-    description="Screen-reader-first climate data reporting API.",
-)
-
 DATASET_SOURCE = "NASA GISS Surface Temperature Analysis (GISTEMP v4)"
 DATASET_START_YEAR = 1880
 DATASET_END_YEAR = 2025
 MINIMUM_REPORT_OBSERVATIONS = 5
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    app.state.climate_data = load_gistemp_annual_data()
+    yield
+    del app.state.climate_data
+
+
+app = FastAPI(
+    title="Climate Commons API",
+    version="0.3.0",
+    description="Screen-reader-first climate data reporting API.",
+    lifespan=lifespan,
+)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -56,7 +66,7 @@ def homepage():
 
 
 def load_climate_data() -> pd.DataFrame:
-    return load_gistemp_annual_data()
+    return app.state.climate_data.copy()
 
 
 def select_observations(

@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -16,6 +15,11 @@ app = FastAPI(
     version="0.3.0",
     description="Screen-reader-first climate data reporting API.",
 )
+
+DATASET_SOURCE = "NASA GISS Surface Temperature Analysis (GISTEMP v4)"
+DATASET_START_YEAR = 1880
+DATASET_END_YEAR = 2025
+MINIMUM_REPORT_OBSERVATIONS = 5
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -106,23 +110,28 @@ def health_check() -> HealthResponse:
 @app.get("/observations", response_model=ObservationsResponse)
 def climate_observations(
     start_year: Optional[int] = Query(
-    default=None,
-    ge=1880,
-    le=2025,
-    description="First year to include, from 1880 through 2025.",
-),
-end_year: Optional[int] = Query(
-    default=None,
-    ge=1880,
-    le=2025,
-    description="Last year to include, from 1880 through 2025.",
-),
-
+        default=None,
+        ge=DATASET_START_YEAR,
+        le=DATASET_END_YEAR,
+        description=(
+            "First year to include, from "
+            f"{DATASET_START_YEAR} through {DATASET_END_YEAR}."
+        ),
+    ),
+    end_year: Optional[int] = Query(
+        default=None,
+        ge=DATASET_START_YEAR,
+        le=DATASET_END_YEAR,
+        description=(
+            "Last year to include, from "
+            f"{DATASET_START_YEAR} through {DATASET_END_YEAR}."
+        ),
+    ),
 ) -> ObservationsResponse:
     data = select_observations(start_year, end_year)
 
     return ObservationsResponse(
-        source="NASA GISS Surface Temperature Analysis (GISTEMP v4)",
+        source=DATASET_SOURCE,
         observations=[
             Observation(
                 year=int(row.year),
@@ -137,21 +146,26 @@ end_year: Optional[int] = Query(
 def climate_report(
     start_year: Optional[int] = Query(
         default=None,
-        ge=1880,
-        le=2025,
-        description="First year to include in the report, from 1880 through 2025.",
+        ge=DATASET_START_YEAR,
+        le=DATASET_END_YEAR,
+        description=(
+            "First year to include in the report, from "
+            f"{DATASET_START_YEAR} through {DATASET_END_YEAR}."
+        ),
     ),
     end_year: Optional[int] = Query(
         default=None,
-        ge=1880,
-        le=2025,
-        description="Last year to include in the report, from 1880 through 2025.",
+        ge=DATASET_START_YEAR,
+        le=DATASET_END_YEAR,
+        description=(
+            "Last year to include in the report, from "
+            f"{DATASET_START_YEAR} through {DATASET_END_YEAR}."
+        ),
     ),
 ) -> ClimateReport:
-
     data = select_observations(start_year, end_year)
 
-    if len(data) < 5:
+    if len(data) < MINIMUM_REPORT_OBSERVATIONS:
         raise HTTPException(
             status_code=400,
             detail=(
@@ -180,7 +194,7 @@ def climate_report(
         )
 
     return ClimateReport(
-        source="NASA GISS Surface Temperature Analysis (GISTEMP v4)",
+        source=DATASET_SOURCE,
         coverage_start_year=int(data["year"].min()),
         coverage_end_year=int(data["year"].max()),
         observation_count=int(len(data)),

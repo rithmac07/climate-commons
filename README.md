@@ -3,7 +3,6 @@
 A screen-reader-friendly web application that reports annual global temperature anomalies from NASA GISTEMP v4 data.
 
 ## Features
-
 - Reports the latest annual global temperature anomaly
 - Calculates a five-year average anomaly
 - Calculates a linear temperature trend in degrees Celsius per decade
@@ -13,7 +12,6 @@ A screen-reader-friendly web application that reports annual global temperature 
 - Provides status and error messages for screen-reader users
 
 ## Data source
-
 This project uses NASA GISS Surface Temperature Analysis (GISTEMP v4) annual global temperature anomaly data.
 
 Temperature anomalies describe how much warmer or cooler a period was relative to NASA's 1951–1980 baseline.

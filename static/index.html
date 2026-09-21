@@ -1,102 +1,430 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Climate Commons</title>
-    <link rel="stylesheet" href="/static/styles.css">
-  </head>
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <meta
+    name="description"
+    content="Climate Commons provides accessible summaries of NASA GISTEMP global temperature anomaly data."
+  >
+  <title>Climate Commons</title>
 
-  <body>
-    <main>
+  <style>
+    :root {
+      --background: #f7fbff;
+      --surface: #ffffff;
+      --text: #102a43;
+      --muted: #486581;
+      --primary: #075985;
+      --primary-dark: #063f5c;
+      --border: #bcccdc;
+      --success: #0f5132;
+      --error: #9b1c1c;
+      --focus: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    a {
+      color: var(--primary-dark);
+    }
+
+    a:hover {
+      color: #032f46;
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      background: #000000;
+      color: #ffffff;
+      left: 1rem;
+      padding: 0.75rem 1rem;
+      position: absolute;
+      top: -4rem;
+      z-index: 10;
+    }
+
+    .skip-link:focus {
+      top: 1rem;
+    }
+
+    header {
+      background: var(--primary-dark);
+      color: #ffffff;
+      padding: 2.5rem 1rem;
+    }
+
+    .container {
+      margin: 0 auto;
+      max-width: 900px;
+      padding: 0 1rem;
+    }
+
+    header h1 {
+      font-size: 2.25rem;
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      margin: 0.75rem 0 0;
+      max-width: 46rem;
+    }
+
+    main {
+      padding: 2rem 0 3rem;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      margin: 1.25rem 0;
+      padding: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-top: 0;
+    }
+
+    .summary {
+      border-left: 0.5rem solid var(--primary);
+    }
+
+    .status {
+      font-weight: 700;
+      margin-top: 1rem;
+    }
+
+    .loading {
+      color: var(--muted);
+    }
+
+    .error {
+      color: var(--error);
+    }
+
+    .report {
+      background: #eef8ff;
+      border-left: 0.5rem solid var(--primary);
+      margin-top: 1.25rem;
+      padding: 1rem;
+    }
+
+    form {
+      display: grid;
+      gap: 1rem;
+      max-width: 36rem;
+    }
+
+    label {
+      font-weight: 700;
+    }
+
+    input {
+      border: 1px solid var(--border);
+      border-radius: 0.25rem;
+      color: var(--text);
+      font: inherit;
+      padding: 0.6rem;
+      width: 100%;
+    }
+
+    button {
+      background: var(--primary);
+      border: 0;
+      border-radius: 0.25rem;
+      color: #ffffff;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 0.75rem 1rem;
+      width: fit-content;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    .links li {
+      list-style: none;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 0 0 2rem;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.8rem;
+      }
+
+      section {
+        padding: 1.1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header>
+    <div class="container">
       <h1>Climate Commons</h1>
-
       <p>
-        A simple report of global temperature anomalies based on NASA GISTEMP data.
+        Accessible summaries of global temperature anomaly data from
+        NASA's GISS Surface Temperature Analysis.
+      </p>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <section class="summary" aria-labelledby="latest-heading">
+      <h2 id="latest-heading">Latest climate summary</h2>
+      <p id="summary-status" class="status loading" aria-live="polite">
+        Loading the latest climate summary.
+      </p>
+    </section>
+
+    <section aria-labelledby="report-heading">
+      <h2 id="report-heading">Create a climate report</h2>
+      <p>
+        Choose a year range with at least five annual observations.
+        The report calculates the temperature trend for that period.
       </p>
 
-      <form id="range-form" novalidate>
-        <fieldset>
-          <legend>Choose a report period</legend>
+      <form id="report-form">
+        <div>
+          <label for="start-year">Start year</label>
+          <input
+            id="start-year"
+            name="start-year"
+            type="number"
+            min="1880"
+            max="2025"
+            value="1980"
+            required
+          >
+        </div>
 
-          <p>
-            <label for="start-year">Start year</label>
-            <input
-              id="start-year"
-              name="start-year"
-              type="number"
-              min="1880"
-              max="2025"
-              inputmode="numeric"
-            >
-          </p>
+        <div>
+          <label for="end-year">End year</label>
+          <input
+            id="end-year"
+            name="end-year"
+            type="number"
+            min="1880"
+            max="2025"
+            value="2025"
+            required
+          >
+        </div>
 
-          <p>
-            <label for="end-year">End year</label>
-            <input
-              id="end-year"
-              name="end-year"
-              type="number"
-              min="1880"
-              max="2025"
-              inputmode="numeric"
-            >
-          </p>
-
-          <button type="submit">Update report</button>
-          <button type="button" id="reset-range">
-            Use the full record
-          </button>
-        </fieldset>
+        <button type="submit">Generate climate report</button>
       </form>
 
-      <p id="status" role="status" aria-live="polite">
-        Loading climate report...
+      <div
+        id="report-result"
+        class="report"
+        hidden
+        aria-live="polite"
+      ></div>
+    </section>
+
+    <section aria-labelledby="data-heading">
+      <h2 id="data-heading">Data and tools</h2>
+      <ul class="links">
+        <li>
+          <a
+            id="csv-link"
+            href="/observations.csv?start_year=1980&end_year=2025"
+          >
+            Download observations as CSV
+          </a>
+        </li>
+        <li><a href="/metadata">View dataset metadata</a></li>
+        <li><a href="/docs">View API documentation</a></li>
+        <li>
+          <a
+            href="https://data.giss.nasa.gov/gistemp/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Visit the NASA GISTEMP source
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="about-heading">
+      <h2 id="about-heading">About this data</h2>
+      <p>
+        A temperature anomaly shows the difference between a year's global
+        surface temperature and the 1951–1980 average. Positive values are
+        warmer than that baseline; negative values are cooler.
       </p>
+      <p>
+        Climate Commons uses NASA GISTEMP v4 data. NASA describes GISTEMP v4
+        as an estimate of global surface temperature change and provides the
+        underlying data and methodology publicly.
+      </p>
+    </section>
+  </main>
 
-      <p id="error" role="alert" tabindex="-1" hidden></p>
+  <footer class="container">
+    <p>
+      Data source: NASA Goddard Institute for Space Studies, GISTEMP v4.
+      This site presents temperature anomalies, not local weather forecasts.
+    </p>
+  </footer>
 
-      <section id="report" hidden aria-labelledby="report-heading">
-        <h2 id="report-heading">Climate report</h2>
+  <script>
+    const summaryStatus = document.getElementById("summary-status");
+    const reportForm = document.getElementById("report-form");
+    const reportResult = document.getElementById("report-result");
+    const startYearInput = document.getElementById("start-year");
+    const endYearInput = document.getElementById("end-year");
+    const csvLink = document.getElementById("csv-link");
 
-        <p id="interpretation"></p>
+    function formatNumber(value) {
+      return Number(value).toFixed(2);
+    }
 
-        <dl>
-          <dt>Report coverage</dt>
-          <dd id="coverage"></dd>
+    function updateCsvLink() {
+      const startYear = startYearInput.value;
+      const endYear = endYearInput.value;
 
-          <dt>Latest annual anomaly</dt>
-          <dd id="latest-anomaly"></dd>
+      csvLink.href =
+        "/observations.csv?start_year=" +
+        encodeURIComponent(startYear) +
+        "&end_year=" +
+        encodeURIComponent(endYear);
+    }
 
-          <dt>Five-year average anomaly</dt>
-          <dd id="five-year-average"></dd>
+    async function loadSummary() {
+      try {
+        const response = await fetch("/summary");
 
-          <dt>Long-term trend</dt>
-          <dd id="trend"></dd>
-        </dl> 
-        <figure aria-labelledby="chart-heading">
-  <h3 id="chart-heading">Annual temperature anomaly</h3>
+        if (!response.ok) {
+          throw new Error("The climate summary could not be loaded.");
+        }
 
-  <svg
-    id="trend-chart"
-    viewBox="0 0 800 360"
-    role="img"
-    aria-labelledby="chart-heading chart-description"
-  >
-    <desc id="chart-description">
-      A line chart of annual global temperature anomalies for the selected
-      period, based on NASA GISTEMP data.
-    </desc>
-  </svg>
+        const data = await response.json();
+        summaryStatus.textContent = data.summary;
+        summaryStatus.className = "status";
+      } catch (error) {
+        summaryStatus.textContent =
+          "The latest climate summary is temporarily unavailable.";
+        summaryStatus.className = "status error";
+      }
+    }
 
-  <figcaption id="chart-caption">
-    Values show annual anomalies relative to NASA's 1951–1980 baseline.
-  </figcaption>
-</figure>
+    function showReportError(message) {
+      reportResult.hidden = false;
+      reportResult.className = "report error";
+      reportResult.textContent = message;
+    }
 
-      </section>
-    </main>
+    function showReport(data) {
+      reportResult.hidden = false;
+      reportResult.className = "report";
 
-    <script src="/static/app.js"></script>
-  </body>
+      reportResult.innerHTML = `
+        <h3>Report for ${data.coverage_start_year} to ${data.coverage_end_year}</h3>
+        <p>
+          The latest year in this range was ${data.latest_year}. Its global
+          temperature anomaly was ${formatNumber(data.latest_anomaly_c)}
+          degrees Celsius relative to the 1951–1980 baseline.
+        </p>
+        <p>
+          The five-year average was
+          ${formatNumber(data.latest_five_year_average_c)} degrees Celsius.
+          The estimated trend was
+          ${formatNumber(data.trend_c_per_decade)} degrees Celsius per decade.
+        </p>
+        <p><strong>${data.interpretation}</strong></p>
+      `;
+    }
+
+    reportForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const startYear = Number(startYearInput.value);
+      const endYear = Number(endYearInput.value);
+
+      updateCsvLink();
+
+      if (startYear > endYear) {
+        showReportError(
+          "The start year must be earlier than or equal to the end year."
+        );
+        return;
+      }
+
+      reportResult.hidden = false;
+      reportResult.className = "report";
+      reportResult.textContent = "Loading climate report.";
+
+      try {
+        const response = await fetch(
+          "/report?start_year=" +
+          encodeURIComponent(startYear) +
+          "&end_year=" +
+          encodeURIComponent(endYear)
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail || "The climate report could not be created."
+          );
+        }
+
+        showReport(data);
+      } catch (error) {
+        showReportError(error.message);
+      }
+    });
+
+    startYearInput.addEventListener("change", updateCsvLink);
+    endYearInput.addEventListener("change", updateCsvLink);
+
+    loadSummary();
+    updateCsvLink();
+  </script>
+</body>
 </html>
